@@ -4002,6 +4002,7 @@ var CollectionView = function (_Component) {
       var _this2 = this;
 
       var _props3 = this.props;
+      var autoHeight = _props3.autoHeight;
       var cellCount = _props3.cellCount;
       var cellLayoutManager = _props3.cellLayoutManager;
       var className = _props3.className;
@@ -4037,7 +4038,7 @@ var CollectionView = function (_Component) {
       }) : [];
 
       var collectionStyle = {
-        height: height,
+        height: autoHeight ? 'auto' : height,
         width: width
       };
 
@@ -4315,6 +4316,12 @@ var CollectionView = function (_Component) {
 
 CollectionView.propTypes = {
   'aria-label': _react.PropTypes.string,
+
+  /**
+   * Removes fixed height from the scrollingContainer so that the total height
+   * of rows can stretch the window. Intended for use with WindowScroller
+   */
+  autoHeight: _react.PropTypes.bool,
 
   /**
    * Number of cells in collection.
