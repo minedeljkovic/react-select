@@ -1021,9 +1021,10 @@ var Select = _react2['default'].createClass({
 		valueKey: _react2['default'].PropTypes.string, // path of the label value in option objects
 		valueRenderer: _react2['default'].PropTypes.func, // valueRenderer: function (option) {}
 		wrapperStyle: _react2['default'].PropTypes.object, // optional style to apply to the component wrapper
-		wrapperComponent: _react2['default'].PropTypes.func },
+		wrapperComponent: _react2['default'].PropTypes.func, // component to wrap select in
+		wrapperProps: _react2['default'].PropTypes.object // custom properties for Wrapper component
+	},
 
-	// component to wrap select in
 	statics: { Async: _Async2['default'], Creatable: _Creatable2['default'] },
 
 	getDefaultProps: function getDefaultProps() {
@@ -2011,7 +2012,7 @@ var Select = _react2['default'].createClass({
 			this.renderHiddenField(valueArray),
 			_react2['default'].createElement(
 				WrapperComponent,
-				null,
+				wrapperProps,
 				_react2['default'].createElement(
 					'div',
 					{ ref: function (ref) {

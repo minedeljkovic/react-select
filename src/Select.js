@@ -111,6 +111,7 @@ const Select = React.createClass({
 		valueRenderer: React.PropTypes.func,        // valueRenderer: function (option) {}
 		wrapperStyle: React.PropTypes.object,       // optional style to apply to the component wrapper
 		wrapperComponent: React.PropTypes.func,     // component to wrap select in
+		wrapperProps: React.PropTypes.object         // custom properties for Wrapper component
 	},
 
 	statics: { Async, Creatable },
@@ -1052,7 +1053,7 @@ const Select = React.createClass({
 				 className={className}
 				 style={this.props.wrapperStyle}>
 				{this.renderHiddenField(valueArray)}
-				<WrapperComponent>
+				<WrapperComponent {...wrapperProps} >
 					<div ref={ref => this.control = ref}
 						className="Select-control"
 						style={this.props.style}
