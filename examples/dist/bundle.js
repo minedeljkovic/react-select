@@ -1066,7 +1066,8 @@ var Select = _react2['default'].createClass({
 			tabSelectsValue: true,
 			valueComponent: _Value2['default'],
 			valueKey: 'value',
-			wrapperComponent: _Wrapper2['default']
+			wrapperComponent: _Wrapper2['default'],
+			wrapperProps: {}
 		};
 	},
 
@@ -2012,7 +2013,7 @@ var Select = _react2['default'].createClass({
 			this.renderHiddenField(valueArray),
 			_react2['default'].createElement(
 				WrapperComponent,
-				wrapperProps,
+				this.props.wrapperProps,
 				_react2['default'].createElement(
 					'div',
 					{ ref: function (ref) {

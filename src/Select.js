@@ -155,7 +155,8 @@ const Select = React.createClass({
 			tabSelectsValue: true,
 			valueComponent: Value,
 			valueKey: 'value',
-			wrapperComponent: Wrapper
+			wrapperComponent: Wrapper,
+			wrapperProps: {}
 		};
 	},
 
@@ -1053,7 +1054,7 @@ const Select = React.createClass({
 				 className={className}
 				 style={this.props.wrapperStyle}>
 				{this.renderHiddenField(valueArray)}
-				<WrapperComponent {...wrapperProps} >
+				<WrapperComponent {...this.props.wrapperProps} >
 					<div ref={ref => this.control = ref}
 						className="Select-control"
 						style={this.props.style}
