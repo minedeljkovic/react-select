@@ -20,19 +20,31 @@ const Creatable = React.createClass({
 		// ({ option: Object, options: Array, labelKey: string, valueKey: string }): boolean
 		isOptionUnique: React.PropTypes.func,
 
-    // Determines if the current input text represents a valid option.
-    // ({ label: string }): boolean
-    isValidNewOption: React.PropTypes.func,
+	    // Determines if the current input text represents a valid option.
+	    // ({ label: string }): boolean
+	    isValidNewOption: React.PropTypes.func,
 
 		// See Select.propTypes.menuRenderer
 		menuRenderer: React.PropTypes.any,
 
-    // Factory to create new option.
-    // ({ label: string, labelKey: string, valueKey: string }): Object
+	    // Factory to create new option.
+	    // ({ label: string, labelKey: string, valueKey: string }): Object
 		newOptionCreator: React.PropTypes.func,
 
-    // Creates prompt/placeholder option text.
-    // (filterText: string): string
+		// input change handler: function (inputValue) {}
+		onInputChange: React.PropTypes.func,
+
+		// input keyDown handler: function (event) {}
+		onInputKeyDown: React.PropTypes.func,
+
+		// new option click handler: function (option) {}
+		onNewOptionClick: React.PropTypes.func,
+
+		// See Select.propTypes.options
+		options: React.PropTypes.array,
+
+	    // Creates prompt/placeholder option text.
+	    // (filterText: string): string
 		promptTextCreator: React.PropTypes.func,
 
 		// Decides if a keyDown event (eg its `keyCode`) should result in the creation of a new option.
@@ -61,47 +73,65 @@ const Creatable = React.createClass({
 	},
 
 	createNewOption () {
-		const { isValidNewOption, newOptionCreator, shouldKeyDownEventCreateNewOption } = this.props;
-		const { labelKey, options, valueKey } = this.select.props;
+		const {
+			isValidNewOption,
+			newOptionCreator,
+			onNewOptionClick,
+			options = [],
+			shouldKeyDownEventCreateNewOption
+		} = this.props;
 
-		const inputValue = this.select.getInputValue();
-
-		if (isValidNewOption({ label: inputValue })) {
-			const option = newOptionCreator({ label: inputValue, labelKey, valueKey });
+		if (isValidNewOption({ label: this.inputValue })) {
+			const option = newOptionCreator({ label: this.inputValue, labelKey: this.labelKey, valueKey: this.valueKey });
 			const isOptionUnique = this.isOptionUnique({ option });
 
 			// Don't add the same option twice.
 			if (isOptionUnique) {
-				options.unshift(option);
+				if (onNewOptionClick) {
+					onNewOptionClick(option);
+				} else {
+					options.unshift(option);
 
-				this.select.selectValue(option);
+					this.select.selectValue(option);
+				}
 			}
 		}
 	},
 
 	filterOptions (...params) {
-		const { filterOptions, isValidNewOption, promptTextCreator } = this.props;
+		const { filterOptions, isValidNewOption, options, promptTextCreator } = this.props;
 
-		const filteredOptions = filterOptions(...params);
+		// TRICKY Check currently selected options as well.
+		// Don't display a create-prompt for a value that's selected.
+		// This covers async edge-cases where a newly-created Option isn't yet in the async-loaded array.
+		const excludeOptions = params[2] || [];
 
-		const inputValue = this.select
-			? this.select.getInputValue()
-			: '';
+		const filteredOptions = filterOptions(...params) || [];
 
-		if (isValidNewOption({ label: inputValue })) {
+		if (isValidNewOption({ label: this.inputValue })) {
 			const { newOptionCreator } = this.props;
-			const { labelKey, options, valueKey } = this.select.props;
 
-			const option = newOptionCreator({ label: inputValue, labelKey, valueKey });
+			const option = newOptionCreator({
+				label: this.inputValue,
+				labelKey: this.labelKey,
+				valueKey: this.valueKey
+			});
 
 			// TRICKY Compare to all options (not just filtered options) in case option has already been selected).
 			// For multi-selects, this would remove it from the filtered list.
-			const isOptionUnique = this.isOptionUnique({ option, options });
+			const isOptionUnique = this.isOptionUnique({
+				option,
+				options: excludeOptions.concat(filteredOptions)
+			});
 
 			if (isOptionUnique) {
-				const prompt = promptTextCreator(inputValue);
+				const prompt = promptTextCreator(this.inputValue);
 
-				this._createPlaceholderOption = newOptionCreator({ label: prompt, labelKey, valueKey });
+				this._createPlaceholderOption = newOptionCreator({
+					label: prompt,
+					labelKey: this.labelKey,
+					valueKey: this.valueKey
+				});
 
 				filteredOptions.unshift(this._createPlaceholderOption);
 			}
@@ -114,20 +144,15 @@ const Creatable = React.createClass({
 		option,
 		options
 	}) {
-		if (!this.select) {
-			return false;
-		}
-
 		const { isOptionUnique } = this.props;
-		const { labelKey, valueKey } = this.select.props;
 
 		options = options || this.select.filterOptions();
 
 		return isOptionUnique({
-			labelKey,
+			labelKey: this.labelKey,
 			option,
 			options,
-			valueKey
+			valueKey: this.valueKey
 		});
 	},
 
@@ -136,12 +161,24 @@ const Creatable = React.createClass({
 
 		return menuRenderer({
 			...params,
-			onSelect: this.onOptionSelect
+			onSelect: this.onOptionSelect,
+			selectValue: this.onOptionSelect
 		});
 	},
 
+	onInputChange (input) {
+		const { onInputChange } = this.props;
+
+		if (onInputChange) {
+			onInputChange(input);
+		}
+
+		// This value may be needed in between Select mounts (when this.select is null)
+		this.inputValue = input;
+	},
+
 	onInputKeyDown (event) {
-		const { shouldKeyDownEventCreateNewOption } = this.props;
+		const { shouldKeyDownEventCreateNewOption, onInputKeyDown } = this.props;
 		const focusedOption = this.select.getFocusedOption();
 
 		if (
@@ -153,6 +190,8 @@ const Creatable = React.createClass({
 
 			// Prevent decorated Select from doing anything additional with this keyDown event
 			event.preventDefault();
+		} else if (onInputKeyDown) {
+			onInputKeyDown(event);
 		}
 	},
 
@@ -166,20 +205,35 @@ const Creatable = React.createClass({
 
 	render () {
 		const {
-			children = defaultChildren,
 			newOptionCreator,
 			shouldKeyDownEventCreateNewOption,
 			...restProps
 		} = this.props;
+
+		let { children } = this.props;
+
+		// We can't use destructuring default values to set the children,
+		// because it won't apply work if `children` is null. A falsy check is
+		// more reliable in real world use-cases.
+		if (!children) {
+			children = defaultChildren;
+		}
 
 		const props = {
 			...restProps,
 			allowCreate: true,
 			filterOptions: this.filterOptions,
 			menuRenderer: this.menuRenderer,
+			onInputChange: this.onInputChange,
 			onInputKeyDown: this.onInputKeyDown,
 			ref: (ref) => {
 				this.select = ref;
+
+				// These values may be needed in between Select mounts (when this.select is null)
+				if (ref) {
+					this.labelKey = ref.props.labelKey;
+					this.valueKey = ref.props.valueKey;
+				}
 			}
 		};
 
