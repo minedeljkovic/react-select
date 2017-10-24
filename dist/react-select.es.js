@@ -114,7 +114,6 @@ function clearRenderer() {
 	});
 }
 
-var babelHelpers = {};
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) {
   return typeof obj;
 } : function (obj) {
@@ -344,28 +343,6 @@ var possibleConstructorReturn = function (self, call) {
 
   return call && (typeof call === "object" || typeof call === "function") ? call : self;
 };
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-babelHelpers;
 
 var Option = function (_React$Component) {
 	inherits(Option, _React$Component);
@@ -612,6 +589,24 @@ Value.propTypes = {
 	onRemove: PropTypes.func, // method to handle removal of the value
 	value: PropTypes.object.isRequired // the option object for this value
 };
+
+var Wrapper = React.createClass({
+  displayName: 'Wrapper',
+
+  propTypes: {
+    children: React.PropTypes.oneOfType([React.PropTypes.arrayOf(React.PropTypes.node), React.PropTypes.node])
+  },
+  render: function render() {
+    // This component adds no markup
+    return React.createElement(
+      'div',
+      null,
+      this.props.children
+    );
+  }
+});
+
+module.exports = Wrapper;
 
 /*!
   Copyright (c) 2017 Jed Watson.
@@ -1701,6 +1696,8 @@ var Select$1 = function (_React$Component) {
 				);
 			}
 
+			var WrapperComponent = this.props.wrapperComponent;
+
 			return React.createElement(
 				'div',
 				{ ref: function ref(_ref7) {
@@ -1710,30 +1707,34 @@ var Select$1 = function (_React$Component) {
 					style: this.props.wrapperStyle },
 				this.renderHiddenField(valueArray),
 				React.createElement(
-					'div',
-					{ ref: function ref(_ref6) {
-							return _this9.control = _ref6;
-						},
-						className: 'Select-control',
-						style: this.props.style,
-						onKeyDown: this.handleKeyDown,
-						onMouseDown: this.handleMouseDown,
-						onTouchEnd: this.handleTouchEnd,
-						onTouchStart: this.handleTouchStart,
-						onTouchMove: this.handleTouchMove
-					},
+					WrapperComponent,
+					this.props.wrapperProps,
 					React.createElement(
-						'span',
-						{ className: 'Select-multi-value-wrapper', id: this._instancePrefix + '-value' },
-						this.renderValue(valueArray, isOpen),
-						this.renderInput(valueArray, focusedOptionIndex)
+						'div',
+						{ ref: function ref(_ref6) {
+								return _this9.control = _ref6;
+							},
+							className: 'Select-control',
+							style: this.props.style,
+							onKeyDown: this.handleKeyDown,
+							onMouseDown: this.handleMouseDown,
+							onTouchEnd: this.handleTouchEnd,
+							onTouchStart: this.handleTouchStart,
+							onTouchMove: this.handleTouchMove
+						},
+						React.createElement(
+							'span',
+							{ className: 'Select-multi-value-wrapper', id: this._instancePrefix + '-value' },
+							this.renderValue(valueArray, isOpen),
+							this.renderInput(valueArray, focusedOptionIndex)
+						),
+						removeMessage,
+						this.renderLoading(),
+						this.renderClear(),
+						this.renderArrow()
 					),
-					removeMessage,
-					this.renderLoading(),
-					this.renderClear(),
-					this.renderArrow()
-				),
-				isOpen ? this.renderOuter(options, !this.props.multi ? valueArray : null, focusedOption) : null
+					isOpen ? this.renderOuter(options, !this.props.multi ? valueArray : null, focusedOption) : null
+				)
 			);
 		}
 	}]);
@@ -1814,7 +1815,11 @@ Select$1.propTypes = {
 	valueComponent: PropTypes.func, // value component to render
 	valueKey: PropTypes.string, // path of the label value in option objects
 	valueRenderer: PropTypes.func, // valueRenderer: function (option) {}
-	wrapperStyle: PropTypes.object // optional style to apply to the component wrapper
+	wrapperStyle: PropTypes.object, // optional style to apply to the component wrapper
+
+	openAfterFocus: React.PropTypes.bool, // boolean to enable opening dropdown when focused
+	wrapperComponent: React.PropTypes.func, // component to wrap select in
+	wrapperProps: React.PropTypes.object // custom properties for Wrapper component
 };
 
 Select$1.defaultProps = {
@@ -1858,7 +1863,11 @@ Select$1.defaultProps = {
 	simpleValue: false,
 	tabSelectsValue: true,
 	valueComponent: Value,
-	valueKey: 'value'
+	valueKey: 'value',
+
+	openAfterFocus: false,
+	wrapperComponent: Wrapper,
+	wrapperProps: {}
 };
 
 var propTypes = {
